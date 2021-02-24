@@ -11,7 +11,6 @@ type userPacket struct {
 }
 
 
-
 func (up *userPacket) SetAll(packetId uint8,sessionId uint8, lastSeenPid uint8,flags uint8, data []byte){
 	up.packetId = packetId
 	up.sessionId =sessionId
