@@ -99,8 +99,8 @@ func ForwardTraffic(conn net.Conn, pr *io.PipeReader) {
 		counter++
 		fmt.Printf("ForwardTraffic:%s\n", string(buf[:]))
 
-		// packet = packet to data(counter)
-		// encodedData = encoded the data(packet)
+		// Packet = Packet to data(counter)
+		// encodedData = encoded the data(Packet)
 		// query = create the DNS query(encodedData) OR DNS response
 		// fire DNSRequest(query) OR RESPONSE
 

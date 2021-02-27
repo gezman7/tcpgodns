@@ -5,46 +5,51 @@ import (
 	"time"
 )
 
-type messageItem struct{
-	timeSent   time.Time
-	userPacket userPacket
-	packetId   uint8
-	index      int
+type MessageItem struct{
+	Sent   time.Time
+	Packet UserPacket
+	Index  int
 }
 
-type messageSentHeap []*messageItem
+func MessageItemFactory(packet UserPacket) MessageItem {
+	return MessageItem{
+		Sent:   time.Now(),
+		Packet: packet,
+	}
+}
+type MessageSentHeap []*MessageItem
 
-func (p messageSentHeap) Len() int { return len(p) }
+func (p MessageSentHeap) Len() int { return len(p) }
 
-func (p messageSentHeap) Less(i, j int) bool {
-	return p[i].timeSent.Before(p[j].timeSent)
+func (p MessageSentHeap) Less(i, j int) bool {
+	return p[i].Sent.Before(p[j].Sent)
 }
 
-func (p messageSentHeap) Swap(i, j int) {
+func (p MessageSentHeap) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
-	p[i].index = i
-	p[j].index = j
+	p[i].Index = i
+	p[j].Index = j
 }
 
-func (p *messageSentHeap) Push(x interface{}) {
+func (p *MessageSentHeap) Push(x interface{}) {
 	n := len(*p)
-	item := x.(*messageItem)
-	item.index = n
+	item := x.(*MessageItem)
+	item.Index = n
 	*p = append(*p, item)
 }
 
-func (p *messageSentHeap) Pop() interface{} {
+func (p *MessageSentHeap) Pop() interface{} {
 	old := *p
 	n := len(old)
 	item := old[n-1]
 	old[n-1] = nil  // avoid memory leak
-	item.index = -1 // for safety
+	item.Index = -1 // for safety
 	*p = old[0 : n-1]
 	return item
 }
 
-func (p *messageSentHeap) update(item *messageItem, timeSent time.Time) {
-	item.timeSent = timeSent
-	heap.Fix(p, item.index)
+func (p *MessageSentHeap) update(item *MessageItem, timeSent time.Time) {
+	item.Sent = timeSent
+	heap.Fix(p, item.Index)
 }
 
