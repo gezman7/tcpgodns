@@ -10,13 +10,13 @@
 //
 // This implementation is designed to minimize heap allocations and avoid
 // unnecessary packing and unpacking as much as possible.
-package datatype
+package tcpgodns
 
 import (
 	"errors"
 )
 
-// DnsMessage formats
+// Message formats
 
 // A Type is a type of DNS request and response.
 type Type uint16
@@ -126,7 +126,7 @@ func (o OpCode) GoString() string {
 type RCode uint16
 
 const (
-	// DnsMessage.Rcode
+	// Message.Rcode
 	RCodeSuccess        RCode = 0
 	RCodeFormatError    RCode = 1
 	RCodeServerFailure  RCode = 2
@@ -354,8 +354,8 @@ func (m *Header) GoString() string {
 		"RCode: " + m.RCode.GoString() + "}"
 }
 
-// DnsMessage is a representation of a DNS message.
-type DnsMessage struct {
+// Message is a representation of a DNS message.
+type Message struct {
 	Header
 	Questions   []Question
 	Answers     []Resource
@@ -1023,8 +1023,8 @@ func (p *Parser) OPTResource() (OPTResource, error) {
 	return r, nil
 }
 
-// Unpack parses a full DnsMessage.
-func (m *DnsMessage) Unpack(msg []byte) error {
+// Unpack parses a full Message.
+func (m *Message) Unpack(msg []byte) error {
 	var p Parser
 	var err error
 	if m.Header, err = p.Start(msg); err != nil {
@@ -1045,14 +1045,14 @@ func (m *DnsMessage) Unpack(msg []byte) error {
 	return nil
 }
 
-// Pack packs a full DnsMessage.
-func (m *DnsMessage) Pack() ([]byte, error) {
+// Pack packs a full Message.
+func (m *Message) Pack() ([]byte, error) {
 	return m.AppendPack(make([]byte, 0, packStartingCap))
 }
 
-// AppendPack is like Pack but appends the full DnsMessage to b and returns the
+// AppendPack is like Pack but appends the full Message to b and returns the
 // extended buffer.
-func (m *DnsMessage) AppendPack(b []byte) ([]byte, error) {
+func (m *Message) AppendPack(b []byte) ([]byte, error) {
 	// Validate the lengths. It is very unlikely that anyone will try to
 	// pack more than 65535 of any particular type, but it is possible and
 	// we should fail gracefully.
@@ -1119,8 +1119,8 @@ func (m *DnsMessage) AppendPack(b []byte) ([]byte, error) {
 }
 
 // GoString implements fmt.GoStringer.GoString.
-func (m *DnsMessage) GoString() string {
-	s := "dnsmessage.DnsMessage{Header: " + m.Header.GoString() + ", " +
+func (m *Message) GoString() string {
+	s := "dnsmessage.Message{Header: " + m.Header.GoString() + ", " +
 		"Questions: []dnsmessage.Question{"
 	if len(m.Questions) > 0 {
 		s += m.Questions[0].GoString()

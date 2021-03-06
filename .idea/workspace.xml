@@ -20,14 +20,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0a01b26f-bac6-47a3-84a0-b42ab58afe94" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/custom_dns.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dns/client/dnsClient.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/local_client/local_client.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/manager.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tcp/udp_server.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/udp/udp_client.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datatype/dnsmessage.go" beforeDir="false" afterPath="$PROJECT_DIR$/message.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datatype/tcppacket.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dns/dnsserver.go" beforeDir="false" afterPath="$PROJECT_DIR$/dns/dnsserver.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tcp/counter.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tcp/messageReceived.go" beforeDir="false" afterPath="$PROJECT_DIR$/tcp/messageReceived.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tcp/messageSentHeap.go" beforeDir="false" afterPath="$PROJECT_DIR$/tcp/messageSentHeap.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tcp/packetManager.go" beforeDir="false" afterPath="$PROJECT_DIR$/tcp/packetManager.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tcp/pipeHandler.go" beforeDir="false" afterPath="$PROJECT_DIR$/tcp/pipeHandler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tcp/userPacket.go" beforeDir="false" afterPath="$PROJECT_DIR$/tcp/userPacket.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tcp/client/client.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tcp/messageReceived.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tcp/messageSentHeap.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tcp/packetManager.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tcp/pipeHandler.go" beforeDir="false" afterPath="$PROJECT_DIR$/pipeHandler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tcp/server/server.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tcp/tests/messageReciverTests.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tcp/userPacket.go" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,19 +76,19 @@
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/tcp/tests" />
-      <recent name="$PROJECT_DIR$/tcp/server" />
-      <recent name="$PROJECT_DIR$/tcp/client" />
       <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/datatype" />
+      <recent name="$PROJECT_DIR$/tcp" />
+      <recent name="$PROJECT_DIR$/tcp/client" />
+      <recent name="$PROJECT_DIR$/localClient" />
+      <recent name="$PROJECT_DIR$/manager" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.go build tcpgodns/tcp/tests">
-    <configuration name="go build client.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Go Build.go build tcpgodns/udp">
+    <configuration name="go build local_client.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="tcpgodns" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="FILE" />
-      <filePath value="$PROJECT_DIR$/tcp/client/client.go" />
+      <filePath value="$PROJECT_DIR$/local_client/local_client.go" />
       <package value="tcpgodns" />
       <directory value="$PROJECT_DIR$" />
       <method v="2" />
@@ -90,40 +102,40 @@
       <directory value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="go build tcpgodns/rawtcp" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+    <configuration name="go build tcpgodns/localClient" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="tcpgodns" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
-      <filePath value="$PROJECT_DIR$/rawtcp/rawserver.go" />
-      <package value="tcpgodns/rawtcp" />
+      <filePath value="$PROJECT_DIR$/localClient/localClient.go" />
+      <package value="tcpgodns/localClient" />
       <directory value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="go build tcpgodns/tcp/client" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+    <configuration name="go build tcpgodns/tcp" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="tcpgodns" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
-      <filePath value="$PROJECT_DIR$/tcp/client/client.go" />
-      <package value="tcpgodns/tcp/client" />
+      <filePath value="$PROJECT_DIR$/tcp/udp_server.go" />
+      <package value="tcpgodns/tcp" />
       <directory value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="go build tcpgodns/tcp/tests" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+    <configuration name="go build tcpgodns/udp" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="tcpgodns" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
-      <filePath value="$PROJECT_DIR$/tcp/tests/messageReciverTests.go" />
-      <package value="tcpgodns/tcp/tests" />
+      <filePath value="$PROJECT_DIR$/udp/udp_server.go" />
+      <package value="tcpgodns/udp" />
       <directory value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Build.go build tcpgodns/tcp/tests" />
-        <item itemvalue="Go Build.go build client.go" />
+        <item itemvalue="Go Build.go build tcpgodns/udp" />
+        <item itemvalue="Go Build.go build tcpgodns/tcp" />
+        <item itemvalue="Go Build.go build local_client.go" />
+        <item itemvalue="Go Build.go build tcpgodns/localClient" />
         <item itemvalue="Go Build.go build server.go" />
-        <item itemvalue="Go Build.go build tcpgodns/tcp/client" />
-        <item itemvalue="Go Build.go build tcpgodns/rawtcp" />
       </list>
     </recent_temporary>
   </component>
@@ -149,54 +161,59 @@
     </ignored-roots>
   </component>
   <component name="WindowStateProjectService">
+    <state x="1029" y="538" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1614543505161">
+      <screen x="0" y="25" width="2560" height="1415" />
+    </state>
+    <state x="1029" y="538" key="#com.intellij.fileTypes.FileTypeChooser/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614543505161" />
     <state x="1061" y="443" key="#com.intellij.ide.util.MemberChooser" timestamp="1614145551556">
       <screen x="0" y="25" width="2560" height="1415" />
     </state>
     <state x="1061" y="443" key="#com.intellij.ide.util.MemberChooser/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614145551556" />
-    <state width="858" height="466" key="DebuggerActiveHint" timestamp="1614272665873">
-      <screen x="0" y="25" width="2560" height="1415" />
-    </state>
-    <state width="858" height="466" key="DebuggerActiveHint/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614272665873" />
-    <state width="1638" height="340" key="GridCell.Tab.0.bottom" timestamp="1614421080096">
+    <state width="891" height="338" key="DebuggerActiveHint" timestamp="1614784241514">
       <screen x="0" y="25" width="1680" height="1025" />
     </state>
-    <state width="1638" height="340" key="GridCell.Tab.0.bottom/0.25.1680.1025@0.25.1680.1025" timestamp="1614421080096" />
-    <state width="2518" height="495" key="GridCell.Tab.0.bottom/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614274845499" />
-    <state width="1638" height="340" key="GridCell.Tab.0.center" timestamp="1614421080095">
+    <state width="891" height="338" key="DebuggerActiveHint/0.25.1680.1025@0.25.1680.1025" timestamp="1614784241514" />
+    <state width="858" height="466" key="DebuggerActiveHint/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614712274179" />
+    <state width="1638" height="260" key="GridCell.Tab.0.bottom" timestamp="1614784247121">
       <screen x="0" y="25" width="1680" height="1025" />
     </state>
-    <state width="1638" height="340" key="GridCell.Tab.0.center/0.25.1680.1025@0.25.1680.1025" timestamp="1614421080095" />
-    <state width="2518" height="495" key="GridCell.Tab.0.center/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614274845498" />
-    <state width="1638" height="340" key="GridCell.Tab.0.left" timestamp="1614421080095">
+    <state width="1638" height="260" key="GridCell.Tab.0.bottom/0.25.1680.1025@0.25.1680.1025" timestamp="1614784247121" />
+    <state width="2518" height="533" key="GridCell.Tab.0.bottom/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614712538696" />
+    <state width="1638" height="260" key="GridCell.Tab.0.center" timestamp="1614784247119">
       <screen x="0" y="25" width="1680" height="1025" />
     </state>
-    <state width="1638" height="340" key="GridCell.Tab.0.left/0.25.1680.1025@0.25.1680.1025" timestamp="1614421080095" />
-    <state width="2518" height="495" key="GridCell.Tab.0.left/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614274845497" />
-    <state width="1638" height="340" key="GridCell.Tab.0.right" timestamp="1614421080095">
+    <state width="1638" height="260" key="GridCell.Tab.0.center/0.25.1680.1025@0.25.1680.1025" timestamp="1614784247119" />
+    <state width="2518" height="533" key="GridCell.Tab.0.center/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614712538696" />
+    <state width="1638" height="260" key="GridCell.Tab.0.left" timestamp="1614784247119">
       <screen x="0" y="25" width="1680" height="1025" />
     </state>
-    <state width="1638" height="340" key="GridCell.Tab.0.right/0.25.1680.1025@0.25.1680.1025" timestamp="1614421080095" />
-    <state width="2518" height="495" key="GridCell.Tab.0.right/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614274845498" />
-    <state width="1638" height="340" key="GridCell.Tab.1.bottom" timestamp="1614421080603">
+    <state width="1638" height="260" key="GridCell.Tab.0.left/0.25.1680.1025@0.25.1680.1025" timestamp="1614784247119" />
+    <state width="2518" height="533" key="GridCell.Tab.0.left/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614712538696" />
+    <state width="1638" height="260" key="GridCell.Tab.0.right" timestamp="1614784247120">
       <screen x="0" y="25" width="1680" height="1025" />
     </state>
-    <state width="1638" height="340" key="GridCell.Tab.1.bottom/0.25.1680.1025@0.25.1680.1025" timestamp="1614421080603" />
-    <state width="2518" height="495" key="GridCell.Tab.1.bottom/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614274845500" />
-    <state width="1638" height="340" key="GridCell.Tab.1.center" timestamp="1614421080603">
+    <state width="1638" height="260" key="GridCell.Tab.0.right/0.25.1680.1025@0.25.1680.1025" timestamp="1614784247120" />
+    <state width="2518" height="533" key="GridCell.Tab.0.right/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614712538696" />
+    <state width="1638" height="260" key="GridCell.Tab.1.bottom" timestamp="1614784247238">
       <screen x="0" y="25" width="1680" height="1025" />
     </state>
-    <state width="1638" height="340" key="GridCell.Tab.1.center/0.25.1680.1025@0.25.1680.1025" timestamp="1614421080603" />
-    <state width="2518" height="495" key="GridCell.Tab.1.center/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614274845500" />
-    <state width="1638" height="340" key="GridCell.Tab.1.left" timestamp="1614421080602">
+    <state width="1638" height="260" key="GridCell.Tab.1.bottom/0.25.1680.1025@0.25.1680.1025" timestamp="1614784247238" />
+    <state width="2518" height="533" key="GridCell.Tab.1.bottom/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614712538781" />
+    <state width="1638" height="260" key="GridCell.Tab.1.center" timestamp="1614784247237">
       <screen x="0" y="25" width="1680" height="1025" />
     </state>
-    <state width="1638" height="340" key="GridCell.Tab.1.left/0.25.1680.1025@0.25.1680.1025" timestamp="1614421080602" />
-    <state width="2518" height="495" key="GridCell.Tab.1.left/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614274845499" />
-    <state width="1638" height="340" key="GridCell.Tab.1.right" timestamp="1614421080603">
+    <state width="1638" height="260" key="GridCell.Tab.1.center/0.25.1680.1025@0.25.1680.1025" timestamp="1614784247237" />
+    <state width="2518" height="533" key="GridCell.Tab.1.center/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614712538780" />
+    <state width="1638" height="260" key="GridCell.Tab.1.left" timestamp="1614784247237">
       <screen x="0" y="25" width="1680" height="1025" />
     </state>
-    <state width="1638" height="340" key="GridCell.Tab.1.right/0.25.1680.1025@0.25.1680.1025" timestamp="1614421080603" />
-    <state width="2518" height="495" key="GridCell.Tab.1.right/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614274845500" />
+    <state width="1638" height="260" key="GridCell.Tab.1.left/0.25.1680.1025@0.25.1680.1025" timestamp="1614784247237" />
+    <state width="2518" height="533" key="GridCell.Tab.1.left/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614712538780" />
+    <state width="1638" height="260" key="GridCell.Tab.1.right" timestamp="1614784247238">
+      <screen x="0" y="25" width="1680" height="1025" />
+    </state>
+    <state width="1638" height="260" key="GridCell.Tab.1.right/0.25.1680.1025@0.25.1680.1025" timestamp="1614784247238" />
+    <state width="2518" height="533" key="GridCell.Tab.1.right/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614712538780" />
     <state x="532" y="229" key="SettingsEditor" timestamp="1614104198099">
       <screen x="0" y="25" width="2560" height="1415" />
     </state>
@@ -206,6 +223,15 @@
       <screen x="0" y="25" width="1680" height="1025" />
     </state>
     <state x="570" y="273" width="540" height="524" key="StructurePopup/0.25.1680.1025@0.25.1680.1025" timestamp="1614419681388" />
+    <state width="840" height="513" key="XDebugger.FullValuePopup" timestamp="1614782844626">
+      <screen x="0" y="25" width="1680" height="1025" />
+    </state>
+    <state width="840" height="513" key="XDebugger.FullValuePopup/0.25.1680.1025@0.25.1680.1025" timestamp="1614782844626" />
+    <state width="1280" height="707" key="XDebugger.FullValuePopup/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614712621573" />
+    <state x="554" y="25" width="2006" height="1396" key="dock-window-1" timestamp="1614542370221">
+      <screen x="0" y="25" width="2560" height="1415" />
+    </state>
+    <state x="554" y="25" width="2006" height="1396" key="dock-window-1/0.25.2560.1415/-1680.415.1680.1025@0.25.2560.1415" timestamp="1614542370221" />
     <state x="1010" y="483" width="602" height="490" key="find.popup" timestamp="1612681682447">
       <screen x="0" y="25" width="2560" height="1415" />
     </state>
@@ -219,19 +245,64 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/dns/dnsserver.go</url>
-          <line>49</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/tcp/tests/messageReciverTests.go</url>
-          <line>48</line>
+          <line>49</line>
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/tcp/tests/messageReciverTests.go</url>
-          <line>46</line>
+          <line>47</line>
           <option name="timeStamp" value="15" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/tcp/tests/messageReciverTests.go</url>
+          <line>24</line>
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/dns/dnsserver.go</url>
+          <line>45</line>
+          <option name="timeStamp" value="21" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/dns/dnsserver.go</url>
+          <line>50</line>
+          <option name="timeStamp" value="22" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/dns/dnsserver.go</url>
+          <line>56</line>
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/message.go</url>
+          <line>1564</line>
+          <option name="timeStamp" value="29" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/custom_dns.go</url>
+          <line>99</line>
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/message.go</url>
+          <line>1292</line>
+          <option name="timeStamp" value="32" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/udp/udp_client.go</url>
+          <line>100</line>
+          <option name="timeStamp" value="37" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/message.go</url>
+          <line>580</line>
+          <option name="timeStamp" value="40" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/udp/udp_client.go</url>
+          <line>65</line>
+          <option name="timeStamp" value="42" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

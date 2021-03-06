@@ -1,6 +1,7 @@
-package tcp
+package tcpgodns
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -19,8 +20,33 @@ func HandlePipeReader(conn net.Conn, pr *io.PipeReader) {
 		}
 
 		fmt.Printf("reader:%s\n", string(buf[:]))
-
 		_, err = conn.Write(buf[0:n])
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+
+	}
+
+}
+func HandlePR(conn net.Conn,manager PacketManager, pr *io.PipeReader) {
+	defer conn.Close()
+
+	var buf [31]byte
+	for {
+		n, err := pr.Read(buf[0:])
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		fmt.Printf("reader: %s\n", string(buf[:]))
+		var userPacket UserPacket
+
+		_= json.Unmarshal(buf[0:n],&userPacket)
+
+		bytes:=manager.ManageIncome(userPacket)
+		_, err = conn.Write(bytes)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
@@ -43,6 +69,7 @@ func HandlePipeWriter(conn net.Conn, pw *io.PipeWriter) {
 		}
 		fmt.Printf("writer:%s\n", string(buf[:]))
 
+
 		_, err = pw.Write(buf[0:n])
 		if err != nil {
 			return
@@ -50,6 +77,8 @@ func HandlePipeWriter(conn net.Conn, pw *io.PipeWriter) {
 
 	}
 }
+
+
 func DialLocally(port string) *net.TCPConn {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":"+port)
 	if err != nil {
@@ -88,7 +117,7 @@ func ForwardTraffic(conn net.Conn, pr *io.PipeReader) {
 	defer conn.Close()
 
 	var buf [31]byte
-	counter :=0
+	counter := 0
 	for {
 		n, err := pr.Read(buf[0:])
 		if err != nil {
@@ -113,5 +142,3 @@ func ForwardTraffic(conn net.Conn, pr *io.PipeReader) {
 	}
 
 }
-
-
