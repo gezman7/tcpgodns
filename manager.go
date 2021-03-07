@@ -2,99 +2,72 @@ package tcpgodns
 
 import (
 	"container/heap"
+	"encoding/base32"
 	"fmt"
+	"github.com/miekg/dns"
 	"math/rand"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+	"unsafe"
 )
 
-type UserPacket struct {
-	Id          uint8
-	sessionId   uint8
-	lastSeenPid uint8
-	Data        []byte
-	flags       uint8
-	//todo:checksum
-}
-
-func userPacketFactory(packetId uint8, sessionId uint8, lastSeenPid uint8, flags uint8, data []byte) UserPacket {
-
-	return UserPacket{
-		Id:          packetId,
-		sessionId:   sessionId,
-		flags:       flags,
-		lastSeenPid: lastSeenPid,
-		Data:        data,
-	}
-}
-
 type PacketManager struct {
-	SessionId    uint8
-	LastReceived uint8
-	SentHeap     SentHeap
-	ReceivedMap  *MsgRcv
-	Conuter      int32
-}
-
-type msgItem struct {
-	Sent   time.Time
-	Packet UserPacket
-	Index  int
+	SessionId     uint8
+	LastReceived  uint8
+	SentHeap      SentHeap
+	ReceivedMap   *MsgRcv
+	Conuter       int32
+	channelWrite  chan []byte
+	channelRead   chan []byte
+	packetChannel chan UserPacket
 }
 
 const MaxNum = 256
 
-func ManagerFactory() *PacketManager {
+func ManagerFactory(cr chan []byte, cw chan []byte) *PacketManager {
 	sentHeap := make(SentHeap, 0)
 	heap.Init(&sentHeap)
 	receivedMap := MessageReceivedFactory()
 	sessionId := rand.Intn(MaxNum)
-
+	packetChannel := make(chan UserPacket)
 	return &PacketManager{
-		SessionId:    uint8(sessionId),
-		LastReceived: 0,
-		SentHeap:     sentHeap,
-		ReceivedMap:  receivedMap,
-		Conuter:      0,
+		SessionId:     uint8(sessionId),
+		LastReceived:  0,
+		SentHeap:      sentHeap,
+		ReceivedMap:   receivedMap,
+		Conuter:       0,
+		channelRead:   cr,
+		channelWrite:  cw,
+		packetChannel: packetChannel,
 	}
 }
+func (pm *PacketManager) LocalStreamIncome() {
 
-func msgItemFactory(packet UserPacket) msgItem {
-	return msgItem{
-		Sent:   time.Now(),
-		Packet: packet,
+	for {
+		var data = <-pm.channelRead
+		packetId := uint8(atomic.AddInt32(&pm.Conuter, 1))
+
+		userPacket := UserPacket{
+			Id:          packetId,
+			SessionId:   pm.SessionId,
+			LastSeenPid: pm.LastReceived,
+			Data:        data,
+			Flags:       0, //todo: Flags
+		}
+		item := msgItemFactory(userPacket)
+
+		fmt.Printf("LocalStreamIncome: registred sentPacket: %d\n", userPacket.Id)
+		heap.Push(&pm.SentHeap, &item)
+
+		pm.packetChannel <- userPacket // send packet to dns
 	}
-}
-
-// Wanted API for PacketManager
-
-func (pm *PacketManager) Read() []byte {
-	return nil
-}
-
-func (pm *PacketManager) ManageOutcome(data []byte, c chan UserPacket) uint8 {
-
-	packetId := uint8(atomic.AddInt32(&pm.Conuter, 1))
-
-	userPacket := UserPacket{
-		Id:          packetId,
-		sessionId:   pm.SessionId,
-		lastSeenPid: pm.LastReceived,
-		Data:        data,
-		flags:       0, //todo: flags
-	}
-	item := msgItemFactory(userPacket)
-
-	fmt.Printf("registerd sentPacket: %d\n", userPacket.Id)
-	heap.Push(&pm.SentHeap, &item)
-	c <- userPacket
-	return userPacket.Id
 }
 
 func (pm *PacketManager) ManageIncome(packet UserPacket) []byte {
-	pm.LastReceived = packet.lastSeenPid
+	pm.LastReceived = packet.LastSeenPid
 	pm.ReceivedMap.Add(packet)
 	packets := pm.ReceivedMap.PopAvailablePackets()
 	return ToBytes(packets)
@@ -111,7 +84,7 @@ func (pm *PacketManager) ManageResend(lastSeen uint8, c chan UserPacket) {
 		}
 		nextPacket := heap.Pop(&pm.SentHeap)
 
-		if nextPacket.(*msgItem).Sent.After(curTime){
+		if nextPacket.(*msgItem).Sent.After(curTime) {
 			heap.Push(&pm.SentHeap, nextPacket)
 			return
 		}
@@ -122,10 +95,10 @@ func (pm *PacketManager) ManageResend(lastSeen uint8, c chan UserPacket) {
 		if nextPacket.(*msgItem).Packet.Id > lastSeen {
 			packetToSend := UserPacket{
 				Id:          nextPacket.(*msgItem).Packet.Id,
-				sessionId:   nextPacket.(*msgItem).Packet.sessionId,
-				lastSeenPid: pm.LastReceived,
+				SessionId:   nextPacket.(*msgItem).Packet.SessionId,
+				LastSeenPid: pm.LastReceived,
 				Data:        nextPacket.(*msgItem).Packet.Data,
-				flags:       0,
+				Flags:       0,
 			}
 			fmt.Printf("resending packet:%v\n", packetToSend)
 			c <- packetToSend
@@ -144,42 +117,6 @@ func ToBytes(packets []UserPacket) []byte {
 	}
 
 	return ByteStream
-}
-
-type SentHeap []*msgItem
-
-func (p SentHeap) Len() int { return len(p) }
-
-func (p SentHeap) Less(i, j int) bool {
-	return p[i].Sent.Before(p[j].Sent)
-}
-
-func (p SentHeap) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-	p[i].Index = i
-	p[j].Index = j
-}
-
-func (p *SentHeap) Push(x interface{}) {
-	n := len(*p)
-	item := x.(*msgItem)
-	item.Index = n
-	*p = append(*p, item)
-}
-
-func (p *SentHeap) Pop() interface{} {
-	old := *p
-	n := len(old)
-	item := old[n-1]
-	old[n-1] = nil  // avoid memory leak
-	item.Index = -1 // for safety
-	*p = old[0 : n-1]
-	return item
-}
-
-func (p *SentHeap) update(item *msgItem, timeSent time.Time) {
-	item.Sent = timeSent
-	heap.Fix(p, item.Index)
 }
 
 type MsgRcv struct {
@@ -208,7 +145,7 @@ func (mr *MsgRcv) Add(packet UserPacket) {
 		return
 	}
 
-	fmt.Printf("Adding Packet %d  to Packet map", packet.Id)
+	fmt.Printf("Adding Packet %d  to Packet map\n", packet.Id)
 	mr.packetMap[packet.Id] = packet
 
 }
@@ -236,7 +173,7 @@ func (mr *MsgRcv) PopAvailablePackets() []UserPacket {
 	for i, k := range keys {
 		if next == uint8(k) {
 			packets[i] = mr.packetMap[uint8(k)]
-			fmt.Printf("Removing Packet %d  from Packet map to the connection", packets[i].Id)
+			fmt.Printf("Removing Packet %d  from Packet map to the connection\n", packets[i].Id)
 
 			lastSent = next
 			next++
@@ -249,5 +186,85 @@ func (mr *MsgRcv) PopAvailablePackets() []UserPacket {
 	mr.mu.Unlock()
 
 	return packets
+
+}
+
+func (pm *PacketManager) HandleDNSResponse(w dns.ResponseWriter, req *dns.Msg) {
+
+	var resp dns.Msg
+	resp.SetReply(req)
+	resp.Response = true
+	question := req.Question[0]
+	fmt.Printf("recived dns query\n")
+	i := strings.Index(question.Name, ".tcpgodns.com")
+	encoded := question.Name[0:i]
+	str, err := base32.HexEncoding.DecodeString(encoded)
+	if err != nil {
+		fmt.Println("Error while decoding query")
+		return
+	}
+	userPacket := BytesToPacket(str)
+	bytesToTcp := pm.ManageIncome(userPacket)
+	fmt.Printf("userPacket Parsed packetId:%d\n ", userPacket.Id)
+
+	msg := []string{"1", "2"}
+	fmt.Printf("size of array:%d size of answer:%d\n", uint16(unsafe.Sizeof(msg)), uint16(len(msg[0])))
+	for _, q := range req.Question {
+		a := dns.TXT{
+			Hdr: dns.RR_Header{
+				Name:     q.Name,
+				Rrtype:   dns.TypeTXT,
+				Class:    dns.ClassINET,
+				Ttl:      0,
+				Rdlength: uint16(1),
+			},
+			Txt: msg,
+		}
+		resp.Answer = append(resp.Answer, &a)
+		println("respAnswer:%v", resp.Answer)
+	}
+	w.WriteMsg(&resp)
+	pm.channelWrite <- bytesToTcp
+
+}
+
+func (pm *PacketManager) HandleDnsClient() {
+
+	for {
+		var data = <-pm.packetChannel // Listen for local incoming packets.
+
+		fmt.Printf("handleDnsClient: packetId:%d\n", data.Id)
+
+		str := encode(data)
+		var msg dns.Msg
+		query := str + ".tcpgodns.com." // todo: change domain to custom
+		msg.SetQuestion(query, dns.TypeTXT)
+
+		fmt.Printf("Question:%v\n", msg)
+
+		in, err := dns.Exchange(&msg, ":5553") // todo: create main parameters
+		if in == nil || err != nil {
+			fmt.Printf("Error with the exchange error:%s\n", err.Error())
+			continue
+		}
+
+		fmt.Printf("respnse recived from dns query: %s\n", in.Answer[0].String())
+
+	}
+}
+
+func encode(packet UserPacket) string {
+	bytesToEncode := packet.PacketToBytes()
+	return base32.HexEncoding.EncodeToString(bytesToEncode)
+}
+
+func decode(str string) UserPacket {
+
+	bytes, err := base32.HexEncoding.DecodeString(str)
+	if err != nil {
+		fmt.Printf("Error with income decoding.")
+	}
+
+	return BytesToPacket(bytes)
 
 }
