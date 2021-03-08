@@ -22,6 +22,9 @@ type msgItem struct {
 func (p SentHeap) Len() int { return len(p) }
 
 func (p SentHeap) Less(i, j int) bool {
+	if p[j]==nil{
+		return true
+	}
 	return p[i].Sent.Before(p[j].Sent)
 }
 

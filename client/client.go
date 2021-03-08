@@ -10,11 +10,11 @@ func main() {
 
 	cr := make(chan []byte)
 	cw := make(chan []byte)
-	mf := tgd.ManagerFactory(cr, cw)
+	mf := tgd.ManagerFactory(cr, cw,true)
 	go mf.HandleDnsClient()
 	fmt.Println(mf)
 	go tgd.ConnectLocally(cr, cw,"9999")
-	go mf.LocalStreamIncome()
+	go mf.FromLocalTcp()
 	for {
 	}
 }
