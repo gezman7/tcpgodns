@@ -10,8 +10,9 @@ type UserPacket struct {
 }
 
 const (
-	NO_DATA = 0
-	DATA    = 1
+	NO_OP = 0
+	DATA  = 1
+	TIMER = 2
 )
 
 func (up UserPacket) PacketToBytes() []byte {
@@ -37,6 +38,6 @@ func EmptyPacket(sessionId uint8, lastSeenPid uint8) UserPacket {
 		SessionId:   sessionId,
 		LastSeenPid: lastSeenPid,
 		Data:        nil,
-		Flags:       NO_DATA,
+		Flags:       NO_OP,
 	}
 }

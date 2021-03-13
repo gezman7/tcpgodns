@@ -5,69 +5,80 @@ import (
 	"fmt"
 	"github.com/miekg/dns"
 	"strings"
+	"time"
 	"unsafe"
 )
 
 func (pm *PacketManager) HandleDnsClient() {
 
 	for {
-		var data = <-pm.packetChannel // Listen for local incoming packets.
+		var outPacket = <-pm.packetChannel // Listen for local incoming packets.
 
-		fmt.Printf("handleDnsClient: packetId:%d\n", data.Id)
+		fmt.Printf("handleDnsClient: packetId:%d\n", outPacket.Id)
 
-		str := encode(data)
-		var msg dns.Msg
-		query := str + ".tcpgodns.com." // todo: change domain to custom
-		msg.SetQuestion(query, dns.TypeTXT)
-
-		fmt.Printf("Question:%v\n", msg)
-
-		in, err := dns.Exchange(&msg, ":5553") // todo: create main parameters
-		if in == nil || err != nil {
-			fmt.Printf("Error with the exchange error:%s\n", err.Error())
+		inPacket,err := dnsExchange(outPacket)
+		if err!=nil{
 			continue
 		}
-		if t, ok := in.Answer[0].(*dns.TXT); ok {
 
-			userPacket := decode(t.Txt[0])
-			fmt.Printf("recived userPacket id:%v via dns\n ", userPacket.Id)
-			pm.ToLocalTcp(userPacket)
-		}
+		pm.ToLocalTcp(inPacket)
 
 	}
 }
 
-func (pm *PacketManager) ClientResendNoOp(){
+func (pm *PacketManager) ClientResendNoOp(interval int) {
 	for {
 
+		var packet UserPacket
+
 		// check if need to resend packet according to ack
-		// if needed create next packet according to ack
+		if pm.FwdMap.IsEmpty() {
+			packet = EmptyPacket(pm.SessionId, pm.localAck)
+			fmt.Printf("Sending NO-OP packet for income data")
 
-		fmt.Printf("Sending NO-OP packet for income data")
-		noOpPacket:= EmptyPacket(pm.SessionId,pm.localAck)
-		str := encode(noOpPacket)
-		var msg dns.Msg
+		} else {
+			packet = pm.FwdMap.GetNext(pm.remoteAck)
+			packet.LastSeenPid = pm.localAck
 
-		query := str + ".tcpgodns.com." // todo: change domain to custom
-		msg.SetQuestion(query, dns.TypeTXT)
+			fmt.Printf("resending packet: %d on ClientResendNoOp with remote ack:%d\n", packet.Id, pm.remoteAck)
+		}
 
-		fmt.Printf("Question:%v\n", msg)
-
-		in, err := dns.Exchange(&msg, ":5553") // todo: create main parameters
-		if in == nil || err != nil {
-			fmt.Printf("Error with the exchange error:%s\n", err.Error())
+		inPacket,err := dnsExchange(packet)
+		if err!=nil{
 			continue
 		}
-		if t, ok := in.Answer[0].(*dns.TXT); ok {
 
-			userPacket := decode(t.Txt[0])
-			fmt.Printf("recived userPacket id:%v via dns\n ", userPacket.Id)
-			pm.ToLocalTcp(userPacket)
-		}
+		pm.ToLocalTcp(inPacket)
+
+		fmt.Printf("resend sleeps for %d Millisecond ",interval)
+
+		time.Sleep(time.Millisecond *time.Duration(interval))
 
 	}
 }
 
+func dnsExchange(outPacket UserPacket) (inPacket UserPacket,err error) {
+	str := encode(outPacket)
+	var msg dns.Msg
+
+	query := str + ".tcpgodns.com." // todo: change domain to custom
+	msg.SetQuestion(query, dns.TypeTXT)
+
+	fmt.Printf("Question:%v\n", msg)
+
+	in, err := dns.Exchange(&msg, ":5553") // todo: create main parameters
+
+	if in == nil || err != nil {
+		fmt.Printf("Error with the exchange error:%s\n", err.Error())
+		//todo: create custom error for in==nil
+	}
+	if t, ok := in.Answer[0].(*dns.TXT); ok {
+
+		inPacket = decode(t.Txt[0])
+		fmt.Printf("recived userPacket id:%v via dns\n ", inPacket.Id)
+	}
+	return
+}
 
 func (pm *PacketManager) HandleDNSResponse(w dns.ResponseWriter, req *dns.Msg) {
 
