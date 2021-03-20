@@ -1,17 +1,15 @@
 package main
 
 import (
+	"flag"
 	"github.com/miekg/dns"
 	"tcpgodns"
 )
 
 func main() {
+	portPtr := flag.String("port", "4222", "The local port to forward the inbound TCP data -MUST BE LISTENED")
 
-	cr := make(chan []byte, 512)
-	cw := make(chan []byte, 512)
-	manager := tcpgodns.ManagerFactory(cr, cw, false)
-	go tcpgodns.ConnectLocally(cr, cw, "9998")
-	go manager.FromLocalTcp()
+	manager := tcpgodns.NewSessionManger(*portPtr)
 
 	dns.HandleFunc(".", manager.HandleDNSResponse)
 	dns.ListenAndServe(":5553", "udp", nil)

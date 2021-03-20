@@ -3,21 +3,28 @@ _________________________
 
 BASIC
 V Create different data structure to manage store to resend messages
-2. add the timed no-op packet sent
-3. address no-op packets on server
-4. Test with another tcp progrem
+V add the timed no-op packet sent
+V address no-op packets on server
+V. Test with another tcp progrem
+V Move dns to a service in manager or session
 
+Support connection EOF
 __________
 MUST
-5. Create a flag and a flow for establishing connection
-6. add a connection to a sessionID and use it
-7. add EOF packet to close connection on the remote machine.
-Add start packet for the first connection established.
-
+V Create a flag and a flow for establishing connection
+Vadd a connection to a sessionID and use it
+7.** important! add EOF packet to close connection on the remote machine.
+V Add start packet for the first connection established.
 __________
 SHOULD
-8. truncate extra zero bytes from msg
-9. change ports and domains to paramters or constants.
-10. investigate the best length of buffers to send maximum data.
+9. change ports and domains to paramters or constants.**
+V add timer for the first resend
+
+CLEAN REDUNDENT CODE
+
+____________________
+NICE
+add remote Address metadata
+Add proper loggers
+8. truncate extra zero bytes from msg NO
 11. CREATE A PROPER NAMESERVER TO WORK WITHIN THE DNS INFRASTRUCTURE.
-12. add timer for the first resend

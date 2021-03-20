@@ -1,47 +1,23 @@
 package tcpgodns
 
 import (
+	"bytes"
 	"fmt"
+	"math"
 	"net"
 	"os"
 )
 
-func ConnectLocally(cr chan []byte, cw chan []byte,port string) {
-	conn := listenLocally(port)
-
-	go handleWrite(conn, cw)
-	go handleRead(conn, cr)
-
+type tcpCommunicator struct {
+	conn           net.Conn
+	port           string
+	openConnection bool
 }
 
-func handleRead(conn net.Conn, cr chan []byte) {
-	defer conn.Close()
+const WindowSize = 120 // ~ 255/(8/5) -4 - hostname max length with the reduction from base32 and header bits
+const MaxByteSize = 1024
 
-	buf := make([]byte, 31) //todo: add constant
-	for {
-		// read up to 130 bytes
-		n, err := conn.Read(buf[0:])
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		fmt.Printf("recived %d byte to read from local TCP conn:%v forwarding to DNS query\n", n, conn.LocalAddr().String())
-		cr <- buf
-	}
-}
-func handleWrite(conn net.Conn, cw chan []byte) {
-	defer conn.Close()
-
-	for {
-		var data = <-cw
-		fmt.Printf("recived %d bytes to write to local TCP conn:%d\n", len(data), conn.LocalAddr())
-		conn.Write(data)
-	}
-}
-
-
-
-func listenLocally(port string) net.Conn {
+func ListenLocally(port string) (communicator *tcpCommunicator) {
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":"+port)
 	if err != nil {
@@ -56,5 +32,88 @@ func listenLocally(port string) net.Conn {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	return conn
+	return &tcpCommunicator{
+		conn:           conn,
+		port:           port,
+		openConnection: true,
+	}
+}
+
+func DialLocally(port string) (communicator *tcpCommunicator) {
+
+	tcpAddr, err := net.ResolveTCPAddr("tcp", ":"+port)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	if err != nil {
+		fmt.Printf("error in dialTcp error:%v\n",
+			err.Error())
+		os.Exit(1)
+	}
+
+	return &tcpCommunicator{
+		conn:           conn,
+		port:           port,
+		openConnection: true,
+	}
+}
+
+func (c *tcpCommunicator) handleRead(reader chan []byte, onClose func(msg string)) {
+	defer c.conn.Close()
+
+	buf := make([]byte, MaxByteSize)
+	for {
+
+		n, err := c.conn.Read(buf[0:])
+		if err != nil {
+			onClose(err.Error())
+			c.openConnection = false
+			fmt.Printf("error on local tcp reader: %v \n", err.Error())
+			return
+		}
+
+
+		buf = bytes.Trim(buf[0:], "\x00")
+		fmt.Printf("recived %d bytes from local TCP conn:%v \n", n, c.conn.LocalAddr().String())
+		var i int
+		for i <= n {
+			edge := math.Min(float64(i+WindowSize), float64(n))
+			reader <- buf[i:int(edge)]
+			i = i + WindowSize
+		}
+		if c.openConnection == false {
+			return
+		}
+
+	}
+}
+func (c *tcpCommunicator) handleWrite(writer chan []byte, onClose func(msg string)) {
+
+	defer c.conn.Close()
+
+	for {
+		var data = <-writer
+		data = bytes.Trim(data[0:], "\x00")
+
+		fmt.Printf("recived %d bytes to write to local TCP s.conn:%d \n", len(data), c.conn.LocalAddr())
+		_, err := c.conn.Write(data)
+		if err != nil {
+			onClose(err.Error())
+			c.openConnection = false
+			fmt.Printf("error on local tcp write:%v\n", err.Error())
+			return
+		}
+
+		if c.openConnection == false {
+			return
+		}
+	}
+}
+
+func (c *tcpCommunicator) Close() {
+	c.openConnection = false
+	c.conn.Close()
 }
