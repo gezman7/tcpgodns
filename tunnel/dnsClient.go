@@ -1,4 +1,4 @@
-package tcpgodns
+package tunnel
 
 import (
 	"fmt"
@@ -39,10 +39,12 @@ func getDefaultOptions() DnsOptions {
 		IsDefault:    true,
 	}
 }
-func (d *DnsClient) HandleDnsClient(s *Session) {
+
+// a go routine that listens for the packet channel of the provided session, parses the channel and sends the information to the dns server
+func (d *DnsClient) HandleClient(packetChannel chan UserPacket, answerHandler func(serverPacket UserPacket), onClose func()) {
 
 	for {
-		var outPacket = <-s.packetChannel // HandleLocalTCP for local incoming packets.
+		var outPacket = <-packetChannel // HandleProxyTCP for local incoming packets.
 
 		if outPacket.Flags == CLOSE {
 			fmt.Printf("local Connection closed. sending CLOSE message to server msg:%v\n", string(outPacket.Data))
@@ -59,24 +61,20 @@ func (d *DnsClient) HandleDnsClient(s *Session) {
 		}
 
 		if outPacket.Flags == CLOSE && response.Flags != CLOSED {
-			fmt.Printf("Server did not recived the Connection closed message. sending one more packet and closing anyway\n")
-			go d.dnsExchange(outPacket)
-			time.Sleep(time.Millisecond * 30)
-			s.localTcp.conn.Close()
-			os.Exit(0)
+			d.exitProgram(onClose, outPacket)
 
 		}
-		s.handleServerAnswer(response)
+		answerHandler(response)
 
 	}
 }
 
-func (d *DnsClient) DialToDns() (ok bool, sessionId uint8, rtt int) {
+func (d *DnsClient) Dial() (ok bool, sessionId uint8, rtt int) {
 	retries := d.options.dialRetries
 
 	for retries != 0 {
 
-		packet := ConnectPacket()
+		packet := connectPacket()
 
 		responsePacket, err := d.dnsExchange(packet)
 		if err != nil {
@@ -87,7 +85,7 @@ func (d *DnsClient) DialToDns() (ok bool, sessionId uint8, rtt int) {
 		if responsePacket.Flags == ESTABLISHED {
 			fmt.Printf("Connected succefully to the server. sessionId:%d\n", responsePacket.SessionId)
 
-			if rtt, ok := responsePacket.GetInterval(); ok {
+			if rtt, ok := responsePacket.interval(); ok {
 				fmt.Printf("Recived rtt from server succefully to the server. sessionId:%d\n", responsePacket.SessionId)
 				return true, responsePacket.SessionId, rtt
 			} else {
@@ -102,34 +100,35 @@ func (d *DnsClient) DialToDns() (ok bool, sessionId uint8, rtt int) {
 
 }
 
-func (d *DnsClient) HandleResendOrNoOp(s *Session) {
+// A go routine looping for keeping the connection alive and allowing the server to initiate data send by continuous empty querying the server
+func (d *DnsClient) HandleResend(interval int,nextPacketHandler func() (packet UserPacket), answerHandler func(serverPacket UserPacket)) {
 	for {
-		time.Sleep(time.Millisecond * time.Duration(s.resendInterval))
+		time.Sleep(time.Millisecond * time.Duration(interval))
 
-		packet := s.NextPacketOrNoOp()
+		packet := nextPacketHandler()
 
 		responsePacket, err := d.dnsExchange(packet)
 		if err != nil {
 			continue
 		}
 
-		s.handleServerAnswer(responsePacket)
+		answerHandler(responsePacket)
 	}
 }
 
+// the internal dns exchange who parses the data provided by the session, encode it and pass it to the server.
 func (d *DnsClient) dnsExchange(outPacket UserPacket) (inPacket UserPacket, err error) {
 	str := encode(outPacket)
 	var msg dns.Msg
 
-	query := str + d.options.domain // todo: change domain to custom
+	query := str + d.options.domain
 	msg.SetQuestion(query, dns.TypeTXT)
 
-	in, err := dns.Exchange(&msg, d.options.address+":"+d.options.port) // todo: create main parameters
+	in, err := dns.Exchange(&msg, d.options.address+":"+d.options.port)
 
 	if in == nil || err != nil {
 		fmt.Printf("Error with the exchange error:%s\n", err.Error())
 		return
-		//todo: create custom error for in==nil
 	}
 	if t, ok := in.Answer[0].(*dns.TXT); ok {
 
@@ -138,3 +137,13 @@ func (d *DnsClient) dnsExchange(outPacket UserPacket) (inPacket UserPacket, err 
 	return
 }
 
+func (d *DnsClient) exitProgram(onClose func(), outPacket UserPacket) {
+	fmt.Printf("Server did not recived the Connection closed message. sending one more packet and closing anyway\n")
+	go d.dnsExchange(outPacket)
+	time.Sleep(time.Millisecond * 30)
+
+	fmt.Printf("Closing session and exiting progrem\n")
+
+	onClose()
+	os.Exit(0)
+}

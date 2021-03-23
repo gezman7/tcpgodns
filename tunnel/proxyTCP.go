@@ -1,4 +1,4 @@
-package tcpgodns
+package tunnel
 
 import (
 	"bytes"
@@ -17,7 +17,8 @@ type tcpCommunicator struct {
 const WindowSize = 120 // ~ 255/(8/5) -4 - hostname max length with the reduction from base32 and header bits
 const MaxByteSize = 1024
 
-func ListenLocally(port string) (communicator *tcpCommunicator) {
+// open a tcp listener and return the warped connection
+func listenLocally(port string) (communicator *tcpCommunicator) {
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":"+port)
 	if err != nil {
@@ -39,7 +40,9 @@ func ListenLocally(port string) (communicator *tcpCommunicator) {
 	}
 }
 
-func DialLocally(port string) (communicator *tcpCommunicator) {
+// dial to a tcp listener and return the warped connection
+
+func dialLocally(port string) (communicator *tcpCommunicator) {
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":"+port)
 	if err != nil {
@@ -61,7 +64,7 @@ func DialLocally(port string) (communicator *tcpCommunicator) {
 	}
 }
 
-func (c *tcpCommunicator) handleRead(reader chan []byte, onClose func(msg string)) {
+func (c *tcpCommunicator) setReader(reader chan []byte, onClose func(msg string)) {
 	defer c.conn.Close()
 
 	buf := make([]byte, MaxByteSize)
@@ -74,7 +77,6 @@ func (c *tcpCommunicator) handleRead(reader chan []byte, onClose func(msg string
 			fmt.Printf("error on local tcp reader: %v \n", err.Error())
 			return
 		}
-
 
 		buf = bytes.Trim(buf[0:], "\x00")
 		fmt.Printf("recived %d bytes from local TCP conn:%v \n", n, c.conn.LocalAddr().String())
@@ -90,7 +92,7 @@ func (c *tcpCommunicator) handleRead(reader chan []byte, onClose func(msg string
 
 	}
 }
-func (c *tcpCommunicator) handleWrite(writer chan []byte, onClose func(msg string)) {
+func (c *tcpCommunicator) setWriter(writer chan []byte, onClose func(msg string)) {
 
 	defer c.conn.Close()
 

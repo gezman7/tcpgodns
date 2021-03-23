@@ -1,4 +1,4 @@
-package tcpgodns
+package tunnel
 
 import (
 	"encoding/base32"
@@ -8,15 +8,17 @@ import (
 	"time"
 )
 
+// an application level network packet to make a reliable connection over unreliable channel.
 type UserPacket struct {
-	Id          uint8
+	Id          uint16
 	SessionId   uint8
-	LastSeenPid uint8
+	LastSeenPid uint16
 	Data        []byte
 	Flags       uint8
 	//todo:checksum
 }
 
+// UserPacket flags
 const (
 	NO_OP            = 0
 	DATA             = 1
@@ -26,25 +28,42 @@ const (
 	CLOSED           = 5
 )
 
-func (up UserPacket) PacketToBytes() []byte {
+// Markers for the header information byte split.
+const (
+	ID_START = 0
+	ID_END = 2
+	LAST_SEEN_START = 2
+	LAST_SEEN_END = 4
+	SESSION_ID = 4
+	FLAGS = 5
+	START_DATA = 6
 
-	header := []byte{up.Id, up.SessionId, up.LastSeenPid, up.Flags}
+)
+
+
+func (up UserPacket) packetToBytes() []byte {
+
+	header := make([]byte,6)
+	binary.BigEndian.PutUint16(header[ID_START:ID_END], up.Id)
+	binary.BigEndian.PutUint16(header[LAST_SEEN_START:LAST_SEEN_END], up.LastSeenPid)
+	header[SESSION_ID] =up.SessionId
+	header[FLAGS] =up.Flags
 	data := up.Data[:]
 	return append(header, data...)
 }
 
-func BytesToPacket(data []byte) UserPacket {
+func bytesToPacket(data []byte) UserPacket {
 
 	return UserPacket{
-		Id:          data[0],
-		SessionId:   data[1],
-		LastSeenPid: data[2],
-		Data:        data[4:],
-		Flags:       data[3],
+		Id:          binary.BigEndian.Uint16(data[ID_START:ID_END]),
+		LastSeenPid: binary.BigEndian.Uint16(data[LAST_SEEN_START:LAST_SEEN_END]),
+		SessionId:   data[SESSION_ID],
+		Data:        data[START_DATA:],
+		Flags:       data[FLAGS],
 	}
 }
 
-func EmptyPacket(sessionId uint8, lastSeenPid uint8) UserPacket {
+func noOpPacket(sessionId uint8, lastSeenPid uint16) UserPacket {
 	return UserPacket{
 		Id:          0,
 		SessionId:   sessionId,
@@ -54,7 +73,7 @@ func EmptyPacket(sessionId uint8, lastSeenPid uint8) UserPacket {
 	}
 }
 
-func ConnectPacket() UserPacket {
+func connectPacket() UserPacket {
 	buf := make([]byte, 8)
 	time := getTime()
 	binary.PutVarint(buf, time)
@@ -68,10 +87,10 @@ func ConnectPacket() UserPacket {
 	}
 }
 
-func ClosePacket(sessionId uint8, msg string) UserPacket {
+func closePacket(sessionId uint8, msg string) UserPacket {
 	var arr []byte
 
-	copy(arr[:], []byte(msg))
+	copy(arr[:], msg)
 
 
 	return UserPacket{
@@ -83,7 +102,7 @@ func ClosePacket(sessionId uint8, msg string) UserPacket {
 	}
 }
 
-func (up UserPacket) GetInterval() (interval int, ok bool) {
+func (up UserPacket) interval() (interval int, ok bool) {
 
 	if up.Flags != ESTABLISHED {
 		fmt.Printf("cannot get interval since packet is not ESTABLISHED packet")
@@ -102,7 +121,7 @@ func getTime() int64 {
 
 
 func encode(packet UserPacket) string {
-	bytesToEncode := packet.PacketToBytes()
+	bytesToEncode := packet.packetToBytes()
 
 	encoded := base32.HexEncoding.EncodeToString(bytesToEncode)
 	hostnameEncoded := strings.ReplaceAll(encoded, "=", "y")
@@ -118,6 +137,6 @@ func decode(str string) UserPacket {
 		fmt.Printf("Error with income decoding.")
 	}
 
-	return BytesToPacket(bytes)
+	return bytesToPacket(bytes)
 
 }

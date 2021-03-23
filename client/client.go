@@ -2,9 +2,8 @@ package main
 
 import (
 	"flag"
-	tgd "tcpgodns"
+	"tcpgodns/tunnel"
 )
-
 
 type clientOptions struct {
 	localPort     string
@@ -13,6 +12,23 @@ type clientOptions struct {
 }
 
 func main() {
+	options := parseCommand()
+
+	dns := tunnel.NewDnsClient(tunnel.DnsOptions{IsDefault: true})
+
+	ok, sessionId, rtt := dns.Dial()
+	if ok {
+
+		session := tunnel.CreateSession(true, sessionId, rtt)
+		session.ConnectProxy(options.localPort)
+		RunDnsTunnel(session, dns)
+		for {
+		}
+	}
+
+}
+
+func parseCommand() clientOptions {
 	portPtr := flag.String("port", "9999", "The local port to listen to tcp. start with a dial from that port. ")
 	flag.Parse()
 
@@ -21,26 +37,10 @@ func main() {
 		remoteDnsPort: "5553",
 		remoteAddress: "",
 	}
-
-	tcpCommunicator := tgd.ListenLocally(options.localPort)
-	dns := tgd.NewDnsClient(tgd.DnsOptions{IsDefault: true})
-
-	ok, sessionId, rtt := dns.DialToDns()
-	if ok {
-
-		session := tgd.EstablishSession(true, sessionId, rtt)
-		session.ConnectLocal(tcpCommunicator)
-		RunDnsTunnel(session, dns)
-
-		for {
-		}
-
-	}
-
+	return options
 }
 
-func RunDnsTunnel(session *tgd.Session, dns *tgd.DnsClient) {
-	go dns.HandleDnsClient(session)
-	go dns.HandleResendOrNoOp(session)
-
+func RunDnsTunnel(session *tunnel.Session, dns *tunnel.DnsClient) {
+	go dns.HandleClient(session.PacketChannel, session.HandleServerAnswer, session.CloseSession)
+	go dns.HandleResend(session.ResendInterval, session.NextPacket, session.HandleServerAnswer)
 }

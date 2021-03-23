@@ -3,14 +3,23 @@ package main
 import (
 	"flag"
 	"github.com/miekg/dns"
-	"tcpgodns"
+	"tcpgodns/tunnel"
 )
 
+// The Server executable program.
 func main() {
-	portPtr := flag.String("port", "4222", "The local port to forward the inbound TCP data -MUST BE LISTENED")
+	port, dnsPort, domainName := parseCommand()
 
-	manager := tcpgodns.NewSessionManger(*portPtr)
+	manager := tunnel.DnsServer(port, domainName)
 
 	dns.HandleFunc(".", manager.HandleDNSResponse)
-	dns.ListenAndServe(":5553", "udp", nil)
+	dns.ListenAndServe(":"+dnsPort, "udp", nil)
+}
+
+func parseCommand() (string, string, string) {
+	portPtr := flag.String("port", "9998", "The local port to forward the inbound TCP data -MUST BE LISTENED")
+	dnsPtr := flag.String("dns", "5553", "The listening port for incoming dns messages")
+	domainPtr := flag.String("domain", "tcpgodns.com", "The domain to parse out of queries")
+	flag.Parse()
+	return *portPtr, *dnsPtr, *domainPtr
 }
