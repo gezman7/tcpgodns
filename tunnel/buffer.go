@@ -12,13 +12,14 @@ type timedPacket struct {
 	lastSent time.Time
 }
 
-// The outgoing message buffer queue, to manage outgoing resend messages.
+// The outgoing message buffer resendQ, to manage outgoing resend messages.
 type sendBuffer struct {
-	queue *lane.Queue
-	mu    sync.Mutex
+	resendQ *lane.PQueue
+	sendQ   *lane.Queue
+	mu      sync.Mutex
 }
 
-// The incoming message bugger priority queue, to manage incoming messages and safe transfer to the tcp proxy.
+// The incoming message bugger priority pQueue, to manage incoming messages and safe transfer to the tcp proxy.
 type rcvBuffer struct {
 	pQueue   *lane.PQueue
 	contains map[uint16]bool
@@ -79,20 +80,23 @@ func (r *rcvBuffer) popRange(localAck uint16) (packets []UserPacket, ack uint16)
 
 // Ctor for the sending message buffer
 func newSendBuffer() *sendBuffer {
-	queue := lane.NewQueue()
-	return &sendBuffer{queue: queue}
+	resendQ := lane.NewPQueue(lane.MINPQ)
+	sendQ := lane.NewQueue()
+	return &sendBuffer{resendQ: resendQ,
+		sendQ: sendQ}
 }
 
 // Adding userPacket to the sending message buffer with or without timestamp.
 func (sq *sendBuffer) add(packet UserPacket, isSent bool) {
 
 	if isSent {
-		sq.queue.Enqueue(newTimedPacket(packet))
-	} else {
-		sq.queue.Enqueue(timedPacket{
+		sq.resendQ.Push(timedPacket{
 			packet:   packet,
 			lastSent: time.Time{},
-		})
+		}, int(packet.Id))
+	} else {
+		sq.sendQ.Enqueue(packet)
+
 	}
 }
 
@@ -100,24 +104,30 @@ func (sq *sendBuffer) add(packet UserPacket, isSent bool) {
 func (sq *sendBuffer) next(ack uint16, intervalMs int) (packet UserPacket) {
 
 	sq.mu.Lock()
-	for !sq.queue.Empty() {
-		oldest := sq.queue.Head()
+	if !sq.sendQ.Empty() {
+		packet = sq.sendQ.Dequeue().(UserPacket)
+		sq.add(packet, true)
+	} else {
+		for !sq.resendQ.Empty() {
+			oldest, id := sq.resendQ.Head()
 
-		//got ack - dropping packet
-		if oldest.(timedPacket).packet.Id <= ack {
-			sq.queue.Dequeue()
-			continue
-		}
-		// no ack: check next for interval.
-		if oldest.(timedPacket).lastSent.Before(time.Now().Add(-time.Millisecond * time.Duration(intervalMs))) {
-			packet = oldest.(timedPacket).packet
-			sq.queue.Dequeue()
-			resent := newTimedPacket(packet)
-			sq.queue.Enqueue(resent)
-			break
-		} else {
-			packet = UserPacket{}
-			break
+			//got ack - dropping packet
+			if id <= int(ack) {
+				sq.resendQ.Pop()
+				continue
+			}
+
+			// no ack: check next for interval.
+			if oldest.(timedPacket).lastSent.Before(time.Now().Add(-time.Millisecond * time.Duration(intervalMs))) {
+				packet = oldest.(timedPacket).packet
+				sq.resendQ.Pop()
+				resent := newTimedPacket(packet)
+				sq.resendQ.Push(resent, int(packet.Id))
+				break
+			} else {
+				packet = UserPacket{}
+				break
+			}
 		}
 	}
 

@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand"
 	"strings"
+	"time"
 )
 
 type dnsServer struct {
@@ -49,6 +50,7 @@ func (ds *dnsServer) findOpenSlot(id uint8, attempts int) (openSlot uint8, err e
 		err = errors.New("could not found an open slot in given attempts")
 		return
 	}
+	rand.Seed(time.Now().UTC().UnixNano())
 	if _, occupied := ds.SessionMap[id]; occupied {
 		return ds.findOpenSlot(uint8(rand.Intn(MaxNum)), attempts-1)
 	} else {
@@ -92,11 +94,11 @@ func (ds *dnsServer) HandleDNSResponse(w dns.ResponseWriter, req *dns.Msg) {
 		serverPacket = ds.handleClosePacket(clientPacket)
 	}
 
-	asResponse(serverPacket, req, resp)
+	asResponse(serverPacket, req, &resp)
 	w.WriteMsg(&resp)
 }
 
-func asResponse(serverPacket UserPacket, req *dns.Msg, resp dns.Msg) {
+func asResponse(serverPacket UserPacket, req *dns.Msg, resp *dns.Msg) {
 	encodedToSend := encode(serverPacket)
 
 	msg := []string{encodedToSend}

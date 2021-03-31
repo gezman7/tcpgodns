@@ -83,15 +83,7 @@ func (s *Session) handleProxyRead() {
 		}
 
 		packetId := uint16(atomic.AddInt32(&s.PidCounter, 1))
-
-		userPacket := UserPacket{
-			Id:          packetId,
-			SessionId:   s.SessionId,
-			LastSeenPid: s.localAck,
-			Data:        byteStream,
-			Flags:       DATA,
-		}
-
+userPacket:= dataPacket(packetId,s.SessionId,s.localAck,byteStream)
 		fmt.Printf("HandleProxylTCP: %d bytes warpped in user Packet id:%d\n", len(byteStream), userPacket.Id)
 
 		if s.isClient {
@@ -203,7 +195,7 @@ func (s *Session) HandleServerAnswer(packet UserPacket) {
 }
 
 func toBytes(packets []UserPacket) []byte {
-	ByteStream := make([]byte, len(packets)*255)
+	var ByteStream []byte
 	for _, p := range packets {
 		slice := p.Data[:]
 		ByteStream = append(ByteStream, slice...)

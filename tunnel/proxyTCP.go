@@ -12,9 +12,12 @@ type tcpCommunicator struct {
 	conn           net.Conn
 	port           string
 	openConnection bool
+	isClient       bool
 }
 
-const WindowSize = 120 // ~ 255/(8/5) -4 - hostname max length with the reduction from base32 and header bits
+const ServerWindowSize float64 = 120 // ~ 255/(8/5) -4 - TXT max length with the reduction from base32 and header bits
+const ClientWindowSize float64 = 23  // ~ 63/(8/5) -4  -12 bytes- hostname max length with the reduction from base32 and header bits
+
 const MaxByteSize = 1024
 
 // open a tcp listener and return the warped connection
@@ -37,6 +40,7 @@ func listenLocally(port string) (communicator *tcpCommunicator) {
 		conn:           conn,
 		port:           port,
 		openConnection: true,
+		isClient:       true,
 	}
 }
 
@@ -61,6 +65,7 @@ func dialLocally(port string) (communicator *tcpCommunicator) {
 		conn:           conn,
 		port:           port,
 		openConnection: true,
+		isClient:       false,
 	}
 }
 
@@ -70,21 +75,27 @@ func (c *tcpCommunicator) setReader(reader chan []byte, onClose func(msg string)
 	buf := make([]byte, MaxByteSize)
 	for {
 
-		n, err := c.conn.Read(buf[0:])
+		n, err := c.conn.Read(buf)
 		if err != nil {
 			onClose(err.Error())
 			c.openConnection = false
 			fmt.Printf("error on local tcp reader: %v \n", err.Error())
 			return
 		}
+		windowSize := ClientWindowSize
 
-		buf = bytes.Trim(buf[0:], "\x00")
+		if !c.isClient {
+			windowSize = ServerWindowSize
+		}
 		fmt.Printf("recived %d bytes from local TCP conn:%v \n", n, c.conn.LocalAddr().String())
-		var i int
-		for i <= n {
-			edge := math.Min(float64(i+WindowSize), float64(n))
-			reader <- buf[i:int(edge)]
-			i = i + WindowSize
+		for alreadySent := 0; alreadySent < n; {
+			restToSend := n - alreadySent
+			sizeToSend := math.Min(windowSize, float64(restToSend))
+			sendBuffer := make([]byte, int(sizeToSend))
+
+			copy(sendBuffer, buf[alreadySent:alreadySent+int(sizeToSend)])
+			reader <- sendBuffer
+			alreadySent += int(sizeToSend)
 		}
 		if c.openConnection == false {
 			return

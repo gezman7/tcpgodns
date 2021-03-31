@@ -30,12 +30,14 @@ func main() {
 
 func parseCommand() clientOptions {
 	portPtr := flag.String("port", "9999", "The local port to listen to tcp. start with a dial from that port. ")
+	addrPtr := flag.String("addr", "", "The DNS server adderss. for debugging purpose its default as local ")
+	remotePtr := flag.String("dns", "5553", "The DNS server port. for debugging purpose its default as 5553 ")
 	flag.Parse()
 
 	options := clientOptions{
 		localPort:     *portPtr,
-		remoteDnsPort: "5553",
-		remoteAddress: "",
+		remoteDnsPort: *remotePtr,
+		remoteAddress: *addrPtr,
 	}
 	return options
 }

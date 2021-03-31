@@ -18,6 +18,8 @@ type DnsOptions struct {
 	address      string
 	port         string
 	IsDefault    bool
+	serverErrorCount int
+	errorRetries int
 }
 
 //
@@ -37,6 +39,8 @@ func getDefaultOptions() DnsOptions {
 		address:      "",
 		port:         "5553",
 		IsDefault:    true,
+		serverErrorCount: 20,
+		errorRetries: 20,
 	}
 }
 
@@ -111,7 +115,7 @@ func (d *DnsClient) HandleResend(interval int,nextPacketHandler func() (packet U
 		if err != nil {
 			continue
 		}
-
+		d.options.serverErrorCount = d.options.errorRetries
 		answerHandler(responsePacket)
 	}
 }
@@ -128,6 +132,12 @@ func (d *DnsClient) dnsExchange(outPacket UserPacket) (inPacket UserPacket, err 
 
 	if in == nil || err != nil {
 		fmt.Printf("Error with the exchange error:%s\n", err.Error())
+		d.options.serverErrorCount = d.options.serverErrorCount-1
+		if d.options.serverErrorCount <=0{
+			fmt.Printf("could not connect to server sevral times, exiting.")
+
+			os.Exit(1)
+		}
 		return
 	}
 	if t, ok := in.Answer[0].(*dns.TXT); ok {

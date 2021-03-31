@@ -20,34 +20,32 @@ type UserPacket struct {
 
 // UserPacket flags
 const (
-	NO_OP            = 0
-	DATA             = 1
-	CONNECT          = 2
-	ESTABLISHED      = 3
-	CLOSE            = 4
-	CLOSED           = 5
+	NO_OP       = 0
+	DATA        = 1
+	CONNECT     = 2
+	ESTABLISHED = 3
+	CLOSE       = 4
+	CLOSED      = 5
 )
 
 // Markers for the header information byte split.
 const (
-	ID_START = 0
-	ID_END = 2
+	ID_START        = 0
+	ID_END          = 2
 	LAST_SEEN_START = 2
-	LAST_SEEN_END = 4
-	SESSION_ID = 4
-	FLAGS = 5
-	START_DATA = 6
-
+	LAST_SEEN_END   = 4
+	SESSION_ID      = 4
+	FLAGS           = 5
+	START_DATA      = 6
 )
-
 
 func (up UserPacket) packetToBytes() []byte {
 
-	header := make([]byte,6)
+	header := make([]byte, 6)
 	binary.BigEndian.PutUint16(header[ID_START:ID_END], up.Id)
 	binary.BigEndian.PutUint16(header[LAST_SEEN_START:LAST_SEEN_END], up.LastSeenPid)
-	header[SESSION_ID] =up.SessionId
-	header[FLAGS] =up.Flags
+	header[SESSION_ID] = up.SessionId
+	header[FLAGS] = up.Flags
 	data := up.Data[:]
 	return append(header, data...)
 }
@@ -73,6 +71,15 @@ func noOpPacket(sessionId uint8, lastSeenPid uint16) UserPacket {
 	}
 }
 
+func dataPacket(id uint16,sessionId uint8, lastSeenPid uint16, data []byte) UserPacket {
+	return UserPacket{
+		Id:          id,
+		SessionId:   sessionId,
+		LastSeenPid: lastSeenPid,
+		Data:        data,
+		Flags:       DATA,
+	}
+}
 func connectPacket() UserPacket {
 	buf := make([]byte, 8)
 	time := getTime()
@@ -92,7 +99,6 @@ func closePacket(sessionId uint8, msg string) UserPacket {
 
 	copy(arr[:], msg)
 
-
 	return UserPacket{
 		Id:          0,
 		SessionId:   sessionId,
@@ -104,8 +110,8 @@ func closePacket(sessionId uint8, msg string) UserPacket {
 
 func (up UserPacket) interval() (interval int, ok bool) {
 
-	if up.Flags != ESTABLISHED {
-		fmt.Printf("cannot get interval since packet is not ESTABLISHED packet")
+	if up.Flags != ESTABLISHED && up.Flags != CONNECT {
+		fmt.Printf("cannot get interval since the packet is not in CONNECT-ESTABLISHED flow.")
 		return
 	}
 	sentTime, _ := binary.Varint(up.Data)
@@ -118,7 +124,6 @@ func (up UserPacket) interval() (interval int, ok bool) {
 func getTime() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
-
 
 func encode(packet UserPacket) string {
 	bytesToEncode := packet.packetToBytes()
