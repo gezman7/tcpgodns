@@ -79,7 +79,7 @@
       <recent name="$PROJECT_DIR$/../storm/.deps/pkg/mod/github.com/miekg/dns" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.go build client.go">
+  <component name="RunManager" selected="Go Test.TestBufferSend in tcpgodns/tunnel">
     <configuration name="go build client.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="tcpgodns" />
       <working_directory value="$PROJECT_DIR$" />
@@ -98,7 +98,7 @@
       <directory value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestHandlePacketRead in tcpgodns/tunnel" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestBufferRcv in tcpgodns/tunnel" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="tcpgodns" />
       <working_directory value="$PROJECT_DIR$/tunnel" />
       <framework value="gotest" />
@@ -106,7 +106,18 @@
       <package value="tcpgodns/tunnel" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^TestHandlePacketRead$" />
+      <pattern value="^TestBufferRcv$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestBufferSend in tcpgodns/tunnel" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="tcpgodns" />
+      <working_directory value="$PROJECT_DIR$/tunnel" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="tcpgodns/tunnel" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^TestBufferSend$" />
       <method v="2" />
     </configuration>
     <configuration name="TestHandleProxyWrite in tcpgodns/tunnel" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -120,30 +131,20 @@
       <pattern value="^TestHandleProxyWrite$" />
       <method v="2" />
     </configuration>
-    <configuration name="go test tcpgodns/tunnel" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="tcpgodns" />
-      <working_directory value="$PROJECT_DIR$/tunnel" />
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="tcpgodns/tunnel" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
     <list>
       <item itemvalue="Go Build.go build server.go" />
       <item itemvalue="Go Build.go build client.go" />
-      <item itemvalue="Go Test.go test tcpgodns/tunnel" />
-      <item itemvalue="Go Test.TestHandlePacketRead in tcpgodns/tunnel" />
       <item itemvalue="Go Test.TestHandleProxyWrite in tcpgodns/tunnel" />
+      <item itemvalue="Go Test.TestBufferRcv in tcpgodns/tunnel" />
+      <item itemvalue="Go Test.TestBufferSend in tcpgodns/tunnel" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestBufferSend in tcpgodns/tunnel" />
+        <item itemvalue="Go Test.TestBufferRcv in tcpgodns/tunnel" />
         <item itemvalue="Go Build.go build client.go" />
         <item itemvalue="Go Build.go build server.go" />
         <item itemvalue="Go Test.TestHandleProxyWrite in tcpgodns/tunnel" />
-        <item itemvalue="Go Test.TestHandlePacketRead in tcpgodns/tunnel" />
-        <item itemvalue="Go Test.go test tcpgodns/tunnel" />
       </list>
     </recent_temporary>
   </component>
